@@ -1,183 +1,49 @@
 # Trabalho CRUD - LTP2 - Fábio
-# Pedro Resende
-# Pedro Garcia
-import db_crud
-import db_user
-from simple_term_menu import TerminalMenu
 
-# Declaracao de variaveis:
-optionsMenu = []
-optionsUser = []
-oprionsCrud = []
-menu_entry_index = ''
-choice = ''
-
-# Funcoes para abrir os menus:
-# func para mostrar o menu principal
-def show_menu_main():
-    global optionsMenu
-    optionsMenu = ["[1]Menu de Usuários","[2]Menu de Produtos","[3]Sair"]
-    terminal_menu = TerminalMenu(optionsMenu,title="\nO que deseja fazer??\n")
-    global menu_entry_index
-    menu_entry_index = terminal_menu.show()
-
-
-# func para mostrar o menu do crud/gerenciamento de produtos
-def show_menu_crud():
-    global optionsCrud 
-    optionsCrud = ["[1]Listar produtos","[2]Adicionar produto","[3]Remover produto","[4]Atualizar produto","[5]Sair"]
-    terminal_menu = TerminalMenu(optionsCrud,title="\nO que deseja fazer??\n")
-    global menu_entry_index 
-    menu_entry_index= terminal_menu.show()
-
-
-# func para mostras o menu dos usuarios
-def show_menu_user():
-    global optionsUser
-    optionsUser = ["[1]Listar usuários","[2]Adicionar usuário","[3]Remover usuário","[4]Login","[5]Sair"]
-    terminal_menu = TerminalMenu(optionsUser,title="\nO que deseja fazer??\n")
-    global menu_entry_index 
-    menu_entry_index= terminal_menu.show()
-
-
-# Funcoes para operacoes nos menus
-# func para realizar operacoes no menu dos produtos
-def menu_estoque_produto(id_user:int): 
-
-    ## Declarações
-    db:db_crud.DB_crud = db_crud.DB_crud("mercado_estoque.db", id_user)
-
-    id:int
-    nome:str
-    qtd:int
-    preco:float
-
-    ## Algoritmo
-    while True:
-        show_menu_crud()
-        global choice
-        choice = optionsCrud[menu_entry_index]
-        match choice:
-            case "[1]Listar produtos":
-               for i in db.listar_produtos():
-                    print(f"Id: {i[0]}\n Nome: {i[1]}\n Qtd: {i[2]}\n Preço: {i[3]}")
-                    print("\n")
-                   
-            case "[2]Adicionar produto":
-                try:
-                    nome = input("Digite o nome do produto: ").strip()
-                    qtd = int(input("Digite a quantidade em estoque do produto: ").strip())
-                    preco = float(input("Digite o preço do produto: ").strip())
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-                
-                db.inserir_produto(nome,qtd,preco)
-
-            case "[3]Remover produto":
-                try:
-                    id = int(input("Digite o id do produto que deseja ser deletado: ").strip())
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-
-                db.excluir_item(id)
-
-            case "[4]Atualizar produto":
-                try:
-                    id = int(input("Digite o id do produto que deseja alterar: ").strip())
-                    nome = input("Digite o novo nome do produto:  ").strip()
-                    qtd = int(input("Digite a nova quantidade em estoque do produto: ").strip())
-                    preco = float(input("Digite o  novo preço do produto: ").strip())
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-
-                db.atualizar_item(id,nome,qtd,preco)
-
-            case "[5]Sair":
-                print("Saindo, volte sempre!")
-                break
-
-    db.close_db()
-
-# func para realizar operacoes no menu dos usuarios
-# Ele retorna no caso do login
-def menu_users() -> int | None:
-
-    ## Declarações
-    db:db_user.DB_user = db_user.DB_user("usuarios.db")
-    email: str
-    senha: str
-    id: int
-
-    ## Algoritmo
-    while True:
-        show_menu_user()
-
-        global choice
-        choice = optionsUser[menu_entry_index]
-        match choice:
-            case "[1]Listar usuários":
-                for i in db.listar_users():
-                    print(f"Id: {i[0]}\n e-mail: {i[1]}")
-                    print("\n")
-
-            case "[2]Adicionar usuário":
-                try:
-                    email = input("Digite o email do usuário: ").strip()
-                    senha = input("Digite a senha do usuário: ").strip()
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-
-                db.inserir_usuario(email,senha)
-
-            case "[3]Remover usuário":
-                try:
-                    id = int(input("Digite o id do produto que deseja ser deletado: ").strip())
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-                
-                db.excluir_usuario(id)
-
-            case "[4]Login": 
-                try:
-                    email = input("Digite o email do usuário: ").strip()
-                    senha = input("Digite a senha do usuário: ").strip()
-                except ValueError as e:
-                    print(f"Digite um valor válido: {e}")
-                    continue
-                
-                return db.fazer_login(email, senha)
-
-            case "[5]Sair":
-                print("Saindo, volte sempre!")
-                break
-    
-    db.close_db()
-
+import tkinter as tk
+from tkinter import messagebox
 
 def main(): 
+    
 
-    id_user_logado:int | None = None
+    def executar_acao(acao):
+        messagebox.showinfo("Ação", f"Você clicou em: {acao}")
 
-    while True:
-        global choice
-        show_menu_main()
-        choice = optionsMenu[menu_entry_index]
-        match choice:
-            case "[1]Menu de Usuários":
-                id_user_logado = menu_users()
-            case "[2]Menu de Produtos":
-                if id_user_logado == None:
-                    print("Faça o login antes")
-                    continue
-                menu_estoque_produto(id_user_logado[0])
-            case "[3]Sair":
-                print("Saindo, volte sempre!")
-                break
+    root = tk.Tk()
+    root.title("Menu Colorido com Tkinter Puro")
+    root.geometry("900x600")
+    root.resizable(False, False)
+
+    # Frame principal com cor
+    frame_principal = tk.Frame(root, bg="#65dda2", padx=20, pady=20)
+    frame_principal.pack(expand=True, fill='both')
+
+    # Subframe colorido para o menu
+    frame_menu = tk.Frame(frame_principal, bg="#d0e0f0", padx=10, pady=10, bd=2, relief="groove")
+    frame_menu.pack(pady=20)
+
+    # Botões individuais com cores
+    btn_novo = tk.Button(frame_menu, text="Novo", bg="#4caf50", fg="white", width=15, height=2,
+                        command=lambda: executar_acao("Novo"))
+    btn_novo.grid(row=0, column=0, padx=20, pady=20)
+
+    btn_abrir = tk.Button(frame_menu, text="Abrir", bg="#2196f3", fg="white", width=15, height=2,
+                        command=lambda: executar_acao("Abrir"))
+    btn_abrir.grid(row=0, column=1, padx=20, pady=20)
+
+    btn_salvar = tk.Button(frame_menu, text="Salvar", bg="#ff9800", fg="white", width=15, height=2,
+                        command=lambda: executar_acao("Salvar"))
+    btn_salvar.grid(row=1, column=0, padx=20, pady=10)
+
+    btn_exportar = tk.Button(frame_menu, text="Exportar", bg="#9c27b0", fg="white", width=15, height=2,
+                            command=lambda: executar_acao("Exportar"))
+    btn_exportar.grid(row=1, column=1, padx=20, pady=10)
+
+    btn_fechar = tk.Button(frame_menu, text="Fechar", bg="#f44336", fg="white", width=32, height=2,
+                       command=root.destroy)
+    btn_fechar.grid(row=2, column=0, columnspan=2, padx=20, pady=20)
+
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
