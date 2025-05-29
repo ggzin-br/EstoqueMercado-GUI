@@ -8,7 +8,12 @@ class DB:
         self.__conexao = sqlite3.connect(nome_db)
         self.__cursor = self.__conexao.cursor()
 
-        self.__cursor.execute(create_db_query)
+        try:
+            self.__cursor.executescript(create_db_query)
+        except sqlite3.OperationalError:
+            print(f"{nome_db} já existe!, seguindo com o existente...")
+        except sqlite3.Error as e:
+            print(f"Erro: ", e)
 
     def close_db(self):
         self.__conexao.close()

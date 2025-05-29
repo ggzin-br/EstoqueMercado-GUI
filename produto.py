@@ -3,7 +3,8 @@
 
 import sqlite3
 from db import DB
-from produto_temp import Produto
+from user import User
+from user import DB_user
 
 class Produto:
     __nome:str
@@ -28,37 +29,38 @@ class DB_produto(DB):
 
     def __init__(self, nome_db: str):
         
-        super(nome_db, """
+        super().__init__(nome_db, """
         CREATE TABLE produto (
-            nome             VARCHAR2(4000) NOT NULL,
-            preco            NUMBER NOT NULL,
-            id               INTEGER NOT NULL AUTO INCREMENT,
-            usuario_tok_auth INTEGER
-        );
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,                  
+            preco REAL NOT NULL,                 
+            usuario_tok_auth INTEGER,            
 
-        ALTER TABLE produto ADD CONSTRAINT produto_pk PRIMARY KEY ( id );
-              
-        ALTER TABLE produto
-            ADD CONSTRAINT produto_usuario_fk FOREIGN KEY ( usuario_tok_auth )
-                REFERENCES usuario ( tok_auth );
+            FOREIGN KEY (usuario_tok_auth) REFERENCES usuario (tok_auth)
+        );
         """)
 
-    def inserir_produto(self, produto: Produto, qtd:int) -> None:
-        try:
-            for _ in qtd:
-                self.cursor.execute("INSERT INTO produto (nome,preco) VALUES(?,?)", (produto.nome, produto.preco))
-                self.conexao.commit()
-                print(f"Produto \"{produto.nome}\" inserido com sucesso")
-        except sqlite3.IntegrityError:
-            print("Erro: ID já existente")
+    def inserir_produto(self, produto:Produto, qtd:int, user:User) -> None:
+        for _ in range(qtd):
+            self.cursor.execute("INSERT INTO produto (nome,preco,usuario_tok_auth) VALUES(?,?,?)", (produto.nome, produto.preco, user.tok_auth))
+            self.conexao.commit()
+            print(f"Produto \"{produto.nome}\" inserido com sucesso")
 
 
     # READ - Listar ou ler produtos 
-    def listar_produtos(self) -> list[str]:
+    def listar_produtos(self, user: User, produto: Produto=None) -> list[str] | None:
         produtos: list[str]
 
-        self.conexao.execute("",)
+        self.cursor.execute("""
+        SELECT 
+            p.nome,
+            COUNT(*)
+        FROM produto AS p
+        LEFT JOIN usuario AS u ON p.usuario_tok_auth = u.tok_auth
+        WHERE p.usuario_tok_auth = ?
+        """,(user.tok_auth,))
         produtos = self.cursor.fetchall()
+        print(produtos)
         return produtos
 
 
@@ -74,8 +76,8 @@ class DB_produto(DB):
 
 
     #DELETE - Excluir produto
-    def excluir_item(self, id) -> None:
-        self.cursor.execute("",)
+    def excluir_item(self, nome) -> None:
+        self.cursor.execute("DELETE FROM produto WHERE nome = ?",(nome,))
         self.conexao.commit()
 
         if self.cursor.rowcount > 0:

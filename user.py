@@ -14,7 +14,7 @@ class User:
         self.__tok_auth = tok_auth
 
     @property
-    def nome(self) -> str:
+    def email(self) -> str:
         return self.__email
     
     @property
@@ -24,11 +24,12 @@ class User:
 class DB_user(DB):
 
     def __init__(self, nome_db: str):
-        super(nome_db, """
+        super().__init__(nome_db, """
         CREATE TABLE usuario (
             email    VARCHAR2(4000) NOT NULL,
             senha    VARCHAR2(4000) NOT NULL,
-            tok_auth INTEGER NOT NULL
+            tok_auth INTEGER NOT NULL,
+            CONSTRAINT usuario_pk PRIMARY KEY (tok_auth)
         );
 
         ALTER TABLE usuario ADD CONSTRAINT usuario_pk PRIMARY KEY ( tok_auth );
@@ -38,13 +39,13 @@ class DB_user(DB):
         self.cursor.execute("SELECT tok_auth FROM usuario WHERE email = ? AND senha = ?", (email, senha))
         tok_auth = self.cursor.fetchone()
 
-        if self.cursor.rowcount > 0:
-            return tok_auth
+        if tok_auth:
+            return tok_auth[0]
         return None
     
-    def is_user_logado(self, tok_auth:str) -> bool:
-        self.cursor.execute("SELECT email FROM usuario WHERE tok_auth = ?", (tok_auth))
-        return bool(self.cursor.rowcount)
+    def is_user_logado(self, user:User) -> bool:
+        self.cursor.execute("SELECT email FROM usuario WHERE tok_auth = ?", (user.tok_auth,))
+        return bool(self.cursor.fetchone())
 
     def inserir_usuario(self, email:str, senha:str) -> int:
 
@@ -58,12 +59,8 @@ class DB_user(DB):
         while tok_auth in tok_em_uso:
             tok_auth = random.randint(VAL_MIN_TOK, VAL_MAX_TOK)
 
-        try:
-            self.cursor.execute("INSERT INTO usuario (email, senha, tok_auth) VALUES(?,?,?)", (email, senha, tok_auth))
-            self.conexao.commit()
-            print(f"Usuário: \"{email}\" criado com sucesso!")
-        except sqlite3.IntegrityError as e:
-            print(f"Usuário \"{email}\" já existe: {e}")
+        self.cursor.execute("INSERT INTO usuario (email, senha, tok_auth) VALUES(?,?,?)", (email, senha, tok_auth))
+        self.conexao.commit()
 
         return tok_auth
 
